@@ -1,31 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>24h Clock</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Green Clock</title>
   <style>
-    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a1a; }
-    canvas { border: 1px solid #333; }
+    body { 
+      margin: 0; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      height: 100vh; 
+      background: #1a1a1a; 
+      font-family: Consolas, monospace;
+    }
+    #clockContainer {
+      width: 90vmin;
+      height: 90vmin;
+      max-width: 600px;
+      max-height: 600px;
+    }
+    canvas { 
+      border: 1px solid #333; 
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
   </style>
 </head>
 <body>
-  <canvas id="clock" width="400" height="400"></canvas>
+  <div id="clockContainer">
+    <canvas id="clock"></canvas>
+  </div>
 
   <script>
     const canvas = document.getElementById('clock');
     const ctx = canvas.getContext('2d');
-    const radius = 150;
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    let radius = 150;
+    let centerX = canvas.width / 2;
+    let centerY = canvas.height / 2;
 
     // Default sleep schedule (3am–noon)
     let sleepStart = 3; // hours
     let wakeTime = 12; // hours
 
-    function drawClock() {
+    function resizeCanvas() {
+      const container = document.getElementById('clockContainer');
+      const size = Math.min(container.offsetWidth, container.offsetHeight);
+      canvas.width = size;
+      canvas.height = size;
+      radius = size * 0.375;
+      centerX = canvas.width / 2;
+      centerY = canvas.height / 2;
+    }
+
+    function getPragueTime() {
       const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const seconds = now.getSeconds();
+      const pragueTz = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Prague' }));
+      return {
+        hours: pragueTz.getHours(),
+        minutes: pragueTz.getMinutes(),
+        seconds: pragueTz.getSeconds(),
+        date: pragueTz
+      };
+    }
+
+    function drawClock() {
+      const time = getPragueTime();
+      const hours = time.hours;
+      const minutes = time.minutes;
+      const seconds = time.seconds;
+      const now = time.date;
       const currentHour = hours + minutes / 60 + seconds / 3600;
 
       // Clear canvas
@@ -43,13 +88,13 @@
       // Draw current time indicator
       ctx.fillStyle = '#fff';
       ctx.beginPath();
-      ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, radius * 0.033, 0, Math.PI * 2);
       ctx.fill();
 
       // Draw hour hand
       const angleHour = (currentHour / 24) * Math.PI * 2 - Math.PI / 2;
       ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = Math.max(3, radius * 0.02);
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
       ctx.lineTo(centerX + Math.cos(angleHour) * (radius * 0.7), centerY + Math.sin(angleHour) * (radius * 0.7));
@@ -57,17 +102,18 @@
 
       // Draw numbers 0–23
       ctx.fillStyle = '#999';
-      ctx.font = '12px Consolas';
+      const fontSize = Math.max(12, radius * 0.08);
+      ctx.font = fontSize + 'px Consolas';
       ctx.textAlign = 'center';
       for (let i = 0; i < 24; i++) {
         const angle = (i / 24) * Math.PI * 2 - Math.PI / 2;
-        const x = centerX + Math.cos(angle) * (radius - 20);
-        const y = centerY + Math.sin(angle) * (radius - 20);
-        ctx.fillText(i, x, y + 4);
+        const x = centerX + Math.cos(angle) * (radius - fontSize);
+        const y = centerY + Math.sin(angle) * (radius - fontSize);
+        ctx.fillText(i, x, y + fontSize * 0.3);
       }
 
-      ctx.fillText(now.toLocaleTimeString('cs'), centerX, centerY + radius + 20);
-      ctx.fillText(now.toLocaleDateString('cs'), centerX, centerY + radius + 40);
+      ctx.fillText(now.toLocaleTimeString('cs'), centerX, centerY + radius + fontSize);
+      ctx.fillText(now.toLocaleDateString('cs'), centerX, centerY + radius + fontSize * 2);
 
       ctx.beginPath();
       ctx.lineWidth = 1;
@@ -86,8 +132,16 @@
       ctx.fill();
     }
 
+    // Initialize
+    resizeCanvas();
     setInterval(drawClock, 1000);
     drawClock();
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      drawClock();
+    });
   </script>
 </body>
 </html>
