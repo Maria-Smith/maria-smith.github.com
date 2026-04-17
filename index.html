@@ -207,9 +207,13 @@
           remainingHours = (sleepStart + 24) - currentHour;
         }
         
+        // Calculate remaining awake hours percentage
+        const totalAwakeHours = (sleepStart + 24) - wakeTime; // 15 hours
+        const awakePercentage = (remainingHours / totalAwakeHours) * 100;
+        
         const remainingMins = Math.floor((remainingHours % 1) * 60);
         const remainingHoursPart = Math.floor(remainingHours);
-        statusText = `Remaining: ${remainingHoursPart}h ${remainingMins}m`;
+        statusText = `Remaining: ${remainingHoursPart}h ${remainingMins}m (${awakePercentage.toFixed(1)}%)`;
       }
       
       const statusTextElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
